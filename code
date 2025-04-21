@@ -1,3 +1,10 @@
+# In your project root
+git init
+git add .
+git commit -m "Initial commit - Ejaz & Sons"
+gh repo create ejaz-and-sons --public --source=. --remote=origin
+git push -u origin main
+
 // Ejaz & Sons - E-commerce Website (React + Tailwind)
 
 // File: src/main.jsx
