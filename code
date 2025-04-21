@@ -1,0 +1,188 @@
+// Ejaz & Sons - E-commerce Website (React + Tailwind)
+
+// File: src/main.jsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter as Router } from 'react-router-dom';
+import App from './App';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <Router>
+      <App />
+    </Router>
+  </React.StrictMode>
+);
+
+// File: src/App.jsx
+import { Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import Navbar from './components/Navbar';
+import { CartProvider } from './context/CartContext';
+
+export default function App() {
+  return (
+    <CartProvider>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+        </Routes>
+      </div>
+    </CartProvider>
+  );
+}
+
+// File: src/context/CartContext.jsx
+import { createContext, useContext, useState } from 'react';
+
+const CartContext = createContext();
+
+export const useCart = () => useContext(CartContext);
+
+export function CartProvider({ children }) {
+  const [cartItems, setCartItems] = useState([]);
+
+  const addToCart = (product) => {
+    setCartItems((prev) => [...prev, product]);
+  };
+
+  const removeFromCart = (id) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  return (
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart }}>
+      {children}
+    </CartContext.Provider>
+  );
+}
+
+// File: src/components/Navbar.jsx
+import { Link } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+
+export default function Navbar() {
+  const { cartItems } = useCart();
+
+  return (
+    <nav className="bg-white shadow p-4 flex justify-between items-center">
+      <Link to="/" className="text-xl font-bold">Ejaz & Sons</Link>
+      <div className="space-x-4">
+        <Link to="/cart">Cart ({cartItems.length})</Link>
+        <Link to="/checkout">Checkout</Link>
+      </div>
+    </nav>
+  );
+}
+
+// File: src/pages/Home.jsx
+import products from '../data/products';
+import ProductCard from '../components/ProductCard';
+
+export default function Home() {
+  return (
+    <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </div>
+  );
+}
+
+// File: src/components/ProductCard.jsx
+import { useCart } from '../context/CartContext';
+
+export default function ProductCard({ product }) {
+  const { addToCart } = useCart();
+
+  return (
+    <div className="bg-white rounded-2xl shadow p-4">
+      <img src={product.image} alt={product.name} className="w-full h-40 object-cover rounded" />
+      <h2 className="text-lg font-semibold mt-2">{product.name}</h2>
+      <p className="text-gray-600">₹{product.price}</p>
+      <button
+        className="mt-2 w-full bg-black text-white py-1 rounded"
+        onClick={() => addToCart(product)}
+      >
+        Add to Cart
+      </button>
+    </div>
+  );
+}
+
+// File: src/pages/Cart.jsx
+import { useCart } from '../context/CartContext';
+
+export default function Cart() {
+  const { cartItems, removeFromCart } = useCart();
+
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Your Cart</h1>
+      {cartItems.length === 0 ? (
+        <p>Your cart is empty.</p>
+      ) : (
+        <ul className="space-y-4">
+          {cartItems.map((item) => (
+            <li key={item.id} className="bg-white p-4 shadow rounded">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-lg font-semibold">{item.name}</h2>
+                  <p>₹{item.price}</p>
+                </div>
+                <button
+                  onClick={() => removeFromCart(item.id)}
+                  className="text-red-500 hover:underline"
+                >
+                  Remove
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// File: src/pages/Checkout.jsx
+export default function Checkout() {
+  return (
+    <div className="p-6 max-w-xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Checkout</h1>
+      <form className="space-y-4">
+        <input className="w-full border p-2 rounded" placeholder="Full Name" required />
+        <input className="w-full border p-2 rounded" placeholder="Shipping Address" required />
+        <select className="w-full border p-2 rounded">
+          <option value="credit">Credit Card</option>
+          <option value="debit">Debit Card</option>
+          <option value="upi">UPI</option>
+          <option value="wallet">Wallet</option>
+          <option value="cash">Cash on Delivery</option>
+        </select>
+        <button className="w-full bg-black text-white py-2 rounded">Place Order</button>
+      </form>
+    </div>
+  );
+}
+
+// File: src/data/products.js
+const products = Array.from({ length: 200 }).map((_, i) => ({
+  id: i + 1,
+  name: `Product ${i + 1}`,
+  price: Math.floor(Math.random() * 1000) + 100,
+  image: `https://via.placeholder.com/300x200?text=Product+${i + 1}`,
+}));
+
+export default products;
+
+// File: src/index.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
